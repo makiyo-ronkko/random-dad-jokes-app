@@ -12,12 +12,24 @@ class JokeList extends Component {
 
   constructor(props) {
     super(props);
+    // this.state = {
+    //   jokes: [],
+    // };
+
+    // If no jokes, get new jokes
+    // Otherwise, get jokes(string) from localstorage
+    // Parse them into JSON format
     this.state = {
-      jokes: [],
+      jokes: JSON.parse(window.localStorage.getItem('jokes') || '[]'),
     };
   }
 
-  async componentDidMount() {
+  componentDidMount() {
+    // if no jokes, then get new jokes
+    if (this.state.jokes.length === 0) this.getJokes();
+  }
+
+  async getJokes() {
     let jokes = [];
     //less than 10
     while (jokes.length < this.props.numJokesToGet) {
@@ -35,6 +47,12 @@ class JokeList extends Component {
     this.setState({
       jokes: jokes,
     });
+    // Store data to window local storage
+    // Window local storage only stores string
+    window.localStorage.setItem(
+      'jokes', // key
+      JSON.stringify(jokes) // value
+    );
   }
 
   // delta: positive number either negative number
