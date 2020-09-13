@@ -5,7 +5,7 @@ import JokeList from './jokeList';
 
 function App() {
   return (
-    <div className='App'>
+    <div>
       <JokeList />
     </div>
   );
