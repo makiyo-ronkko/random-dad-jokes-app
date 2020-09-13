@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import axios from 'axios';
 import './JokeList.css';
+import { v4 as uuid } from 'uuid';
+import Joke from './Joke';
 
 const BASE_URL = 'https://icanhazdadjoke.com/';
 class JokeList extends Component {
@@ -24,12 +26,26 @@ class JokeList extends Component {
       });
       // console.log(res);
       // console.log(res.data.joke)
-      jokes.push(res.data.joke);
+      // jokes.push(res.data.joke);
+      jokes.push({ text: res.data.joke, votes: 0, id: uuid() });
+      // Push to object instead
+      // This way we can add id, upvotes and downvotes
     }
     console.log(jokes);
     this.setState({
       jokes: jokes,
     });
+  }
+
+  // delta: positive number either negative number
+  handleVote(id, delta) {
+    this.setState((st) => ({
+      jokes: st.jokes.map((j) =>
+        // if id matches, return entire j ojbect and update votes, else return j object into array
+
+        j.id === id ? { ...j, votes: j.votes + delta } : j
+      ),
+    }));
   }
 
   render() {
@@ -47,8 +63,16 @@ class JokeList extends Component {
         </div>
 
         <div className='JokeList-jokes'>
-          {this.state.jokes.map((joke) => (
-            <div>{joke}</div>
+          {this.state.jokes.map((j) => (
+            <Joke
+              key={j.id}
+              votes={j.votes}
+              text={j.text}
+              upvote={() => this.handleVote(j.id, 1)}
+              downvote={() => this.handleVote(j.id, -1)}
+            />
+            //{j} // cannot render object
+            // {j.joke} - {j.votes}
           ))}
         </div>
       </div>
