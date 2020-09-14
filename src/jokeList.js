@@ -24,6 +24,10 @@ class JokeList extends Component {
       loading: false,
     };
     this.handleClick = this.handleClick.bind(this);
+
+    // check if any duplicating text of jokes when loading
+    this.seenJokes = new Set(this.state.jokes.map((j) => j.text));
+    console.log(this.seenJokes);
   }
 
   componentDidMount() {
@@ -34,36 +38,56 @@ class JokeList extends Component {
 
   async getJokes() {
     let jokes = [];
-    //less than 10
-    while (jokes.length < this.props.numJokesToGet) {
-      let res = await axios.get(BASE_URL, {
-        headers: { Accept: 'application/json' }, //default is html ver
-      });
-      // console.log(res);
-      // console.log(res.data.joke)
-      // jokes.push(res.data.joke);
-      jokes.push({ text: res.data.joke, votes: 0, id: uuid() }); // set up votes and id here
-      // Push to object instead
-      // This way we can add id, upvotes and downvotes
-    }
-    console.log(jokes);
-    this.setState(
-      // jokes: jokes, // Initiall overwriting new jokes
-      (st) => ({
+    try {
+      //less than 10
+      while (jokes.length < this.props.numJokesToGet) {
+        let res = await axios.get(BASE_URL, {
+          headers: { Accept: 'application/json' }, //default is html ver
+        });
+        // console.log(res);
+        // console.log(res.data.joke)
+        // jokes.push(res.data.joke);
+
+        //jokes.push({ text: res.data.joke, votes: 0, id: uuid() }); // set up votes and id here
+        // Push to object instead
+        // This way we can add id, upvotes and downvotes
+
+        // check dublicating text of jokes
+        let newJoke = res.data.joke;
+        if (!this.seenJokes.has(newJoke)) {
+          // if no duplication, push new jokes
+          jokes.push({ text: newJoke, votes: 0, id: uuid() });
+        } else {
+          console.log('found a dublicate!');
+          console.log(newJoke);
+        }
+      }
+
+      console.log(jokes);
+
+      this.setState(
+        // jokes: jokes, // Initiall overwriting new jokes
+        (st) => ({
+          loading: false,
+          // return array of existing state jokes, and add new jokes(newly feched)
+          jokes: [...st.jokes, ...jokes],
+        }),
+        () =>
+          // Update new jokes to local storage as a 2nd argument of setState
+          window.localStorage.setItem('jokes', JSON.stringify(this.state.jokes))
+      );
+      // Store data to window local storage
+      // Window local storage only stores string
+      // window.localStorage.setItem(
+      //   'jokes', // key
+      //   JSON.stringify(jokes) // value
+      // );
+    } catch (e) {
+      alert(e);
+      this.setState({
         loading: false,
-        // return array of existing state jokes, and add new jokes(newly feched)
-        jokes: [...st.jokes, ...jokes],
-      }),
-      () =>
-        // Update new jokes to local storage as a 2nd argument of setState
-        window.localStorage.setItem('jokes', JSON.stringify(this.state.jokes))
-    );
-    // Store data to window local storage
-    // Window local storage only stores string
-    // window.localStorage.setItem(
-    //   'jokes', // key
-    //   JSON.stringify(jokes) // value
-    // );
+      });
+    }
   }
 
   // delta: positive number either negative number
