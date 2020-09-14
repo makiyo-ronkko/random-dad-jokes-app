@@ -16,18 +16,20 @@ class JokeList extends Component {
     //   jokes: [],
     // };
 
-    // If no jokes, get new jokes
+    // If no jokes in local storage, get new jokes
     // Otherwise, get jokes(string) from localstorage
     // Parse them into JSON format
     this.state = {
       jokes: JSON.parse(window.localStorage.getItem('jokes') || '[]'),
     };
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
     // if no jokes, then get new jokes
     if (this.state.jokes.length === 0) this.getJokes();
   }
+  // to clear localstorage, 'window.localStorage.clear()'
 
   async getJokes() {
     let jokes = [];
@@ -39,31 +41,46 @@ class JokeList extends Component {
       // console.log(res);
       // console.log(res.data.joke)
       // jokes.push(res.data.joke);
-      jokes.push({ text: res.data.joke, votes: 0, id: uuid() });
+      jokes.push({ text: res.data.joke, votes: 0, id: uuid() }); // set up votes and id here
       // Push to object instead
       // This way we can add id, upvotes and downvotes
     }
     console.log(jokes);
-    this.setState({
-      jokes: jokes,
-    });
+    this.setState(
+      // jokes: jokes, // Initiall overwriting new jokes
+      (st) => ({
+        // return array of existing state jokes, and add new jokes(newly feched)
+        jokes: [...st.jokes, ...jokes],
+      }),
+      () =>
+        // Update new jokes to local storage as a 2nd argument of setState
+        window.localStorage.setItem('jokes', JSON.stringify(this.state.jokes))
+    );
     // Store data to window local storage
     // Window local storage only stores string
-    window.localStorage.setItem(
-      'jokes', // key
-      JSON.stringify(jokes) // value
-    );
+    // window.localStorage.setItem(
+    //   'jokes', // key
+    //   JSON.stringify(jokes) // value
+    // );
   }
 
   // delta: positive number either negative number
   handleVote(id, delta) {
-    this.setState((st) => ({
-      jokes: st.jokes.map((j) =>
-        // if id matches, return entire j ojbect and update votes, else return j object into array
+    this.setState(
+      (st) => ({
+        jokes: st.jokes.map((j) =>
+          // if id matches, return entire j ojbect and update votes, else return j object into array
+          j.id === id ? { ...j, votes: j.votes + delta } : j
+        ),
+      }),
+      () =>
+        // Update new votes to local storage as a 2nd argument of setState
+        window.localStorage.setItem('jokes', JSON.stringify(this.state.jokes))
+    );
+  }
 
-        j.id === id ? { ...j, votes: j.votes + delta } : j
-      ),
-    }));
+  handleClick() {
+    this.getJokes();
   }
 
   render() {
@@ -77,7 +94,9 @@ class JokeList extends Component {
             src='https://assets.dryicons.com/uploads/icon/svg/8927/0eb14c71-38f2-433a-bfc8-23d9c99b3647.svg'
             alt=''
           />
-          <button className='JokeList-getmore'>New Jokes</button>
+          <button className='JokeList-getmore' onClick={this.handleClick}>
+            New Jokes
+          </button>
         </div>
 
         <div className='JokeList-jokes'>
